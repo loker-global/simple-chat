@@ -301,25 +301,46 @@
             // Store current scroll position to prevent jump
             const scrollPos = textarea.scrollTop;
             
-            // Temporarily set to minimal height to get accurate scrollHeight
+            // Reset height completely to get accurate measurement
+            textarea.style.height = 'auto';
             textarea.style.height = '1px';
             
-            // Calculate new height based on content
-            const newHeight = Math.min(
-                Math.max(textarea.scrollHeight, MIN_HEIGHT),
-                MAX_HEIGHT
-            );
+            // Get the actual content height needed
+            const scrollHeight = textarea.scrollHeight;
+            
+            // Calculate new height based on content, with proper bounds
+            let newHeight = Math.max(scrollHeight, MIN_HEIGHT);
+            newHeight = Math.min(newHeight, MAX_HEIGHT);
             
             // Apply new height
             textarea.style.height = newHeight + 'px';
             
             // Restore scroll position if needed
-            if (scrollPos > 0) {
+            if (scrollPos > 0 && newHeight === MAX_HEIGHT) {
                 textarea.scrollTop = scrollPos;
             }
             
-            // Enable scroll if content exceeds max height
-            textarea.style.overflowY = textarea.scrollHeight > MAX_HEIGHT ? 'auto' : 'hidden';
+            // Enable scroll only when content exceeds max height
+            textarea.style.overflowY = scrollHeight > MAX_HEIGHT ? 'auto' : 'hidden';
+        }
+        
+        /**
+         * Handle text area resizing for all input scenarios
+         * Including typing, deleting, cutting, pasting
+         */
+        function handleTextAreaResize() {
+            // Check if textarea is empty and force reset to minimum height
+            if (messageInput.value.trim().length === 0) {
+                // Same reset logic as when sending a message
+                messageInput.style.height = MIN_HEIGHT + 'px';
+                messageInput.style.overflowY = 'hidden';
+            } else {
+                // Use requestAnimationFrame to ensure DOM updates are complete
+                requestAnimationFrame(() => {
+                    adjustTextAreaHeight(messageInput);
+                });
+            }
+            updateSendButtonState();
         }
         
         /**
@@ -425,8 +446,9 @@
             // Clear input
             messageInput.value = '';
             
-            // Reset textarea height
-            adjustTextAreaHeight(messageInput);
+            // Reset textarea height to minimum
+            messageInput.style.height = MIN_HEIGHT + 'px';
+            messageInput.style.overflowY = 'hidden';
             
             // Update button state
             updateSendButtonState();
@@ -447,12 +469,27 @@
         }
         
         // Event listeners
-        messageInput.addEventListener('input', () => {
-            adjustTextAreaHeight(messageInput);
-            updateSendButtonState();
-        });
+        messageInput.addEventListener('input', handleTextAreaResize);
         
         messageInput.addEventListener('keydown', handleKeyDown);
+        
+        // Handle cut, paste, and other operations that change content
+        messageInput.addEventListener('cut', () => {
+            // Small delay to let cut operation complete
+            setTimeout(handleTextAreaResize, 5);
+        });
+        
+        messageInput.addEventListener('paste', () => {
+            // Small delay to let paste operation complete
+            setTimeout(handleTextAreaResize, 5);
+        });
+        
+        // Handle keyup to catch delete/backspace operations
+        messageInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Backspace' || event.key === 'Delete') {
+                handleTextAreaResize();
+            }
+        });
         
         sendButton.addEventListener('click', sendMessage);
         
