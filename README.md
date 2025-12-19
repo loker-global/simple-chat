@@ -378,8 +378,11 @@ ChatContainer
 ```javascript
 // Pseudo-code
 function adjustTextAreaHeight(textarea) {
-  // Reset height to auto to get accurate scrollHeight
-  textarea.style.height = 'auto';
+  // Store current scroll position to prevent jump
+  const scrollPos = textarea.scrollTop;
+  
+  // Temporarily set to minimal height to get accurate scrollHeight
+  textarea.style.height = '1px';
   
   // Calculate new height based on content
   const newHeight = Math.min(
@@ -389,6 +392,9 @@ function adjustTextAreaHeight(textarea) {
   
   // Apply new height with transition
   textarea.style.height = newHeight + 'px';
+  
+  // Restore scroll position if needed
+  if (scrollPos > 0) textarea.scrollTop = scrollPos;
   
   // Enable scroll if content exceeds max height
   textarea.style.overflowY = 
@@ -694,7 +700,7 @@ The Simple Chat application will be considered successful when:
 1. Should we support message reactions (emoji reactions)? → Future enhancement
 2. Maximum number of simultaneous file uploads? → Proposed: 10 files
 3. Support for animated GIFs in addition to static images? → Yes, covered under image support
-4. Should we compress images on client-side before upload? → Recommended for images >2MB
+4. Should we compress images on client-side before upload? → Recommended for images >2MB to optimize upload time while staying within 10MB limit
 5. Handling of very large videos (>100MB)? → Reject with clear error message, suggest compression
 
 ---
@@ -702,9 +708,9 @@ The Simple Chat application will be considered successful when:
 ## 12. Contact and Feedback
 
 For questions, suggestions, or feedback regarding this PRD, please contact:
-- Product Manager: [TBD]
-- Engineering Lead: [TBD]
-- Design Lead: [TBD]
+- Product Manager: [Contact information will be added when team assignments are finalized]
+- Engineering Lead: [Contact information will be added when team assignments are finalized]
+- Design Lead: [Contact information will be added when team assignments are finalized]
 
 **Document Version**: 1.0  
 **Last Updated**: 2025-12-19  
